@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sustainable Smart City Assistant</title>
+  <link rel="stylesheet" href="/static/style.css">
+
+  <!-- 🗺️ Leaflet.js Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- 🗺️ Leaflet.js Map Script -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- 📌 Your custom map logic -->
+  <script src="/static/map.js"></script>
+
+  <!-- 📊 Chart.js for Graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+ <div style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 0;
+  "></div>
+  <h1>Sustainable Smart City Assistant</h1>
+  <p>Powered By IBM Granite AI Model</p>
+
+  <form method="post">
+    <select name="topic" required>
+      <option value="Traffic">🚦 Traffic</option>
+      <option value="Energy">⚡ Energy</option>
+      <option value="Water">💧 Water</option>
+      <option value="Waste">🗑️ Waste</option>
+      <option value="Eco">🌱 Eco Living</option>
+    </select>
+
+    <input type="text" name="user_input" placeholder="Ask something about smart cities..." required>
+    <button type="submit">Ask</button>
+  </form>
+
+  <h2>🧠 Try These Smart Questions</h2>
+  <div class="suggestion-buttons">
+    <button type="button" onclick="fillAndSubmit('What are the best eco-friendly waste disposal methods in cities?')">♻️ Smart Eco Tips</button>
+    <button type="button" onclick="fillAndSubmit('Here is our past water usage: Jan - 120L, Feb - 130L, Mar - 110L. What should we expect next?')">💧 Water Trend Analysis</button>
+    <button type="button" onclick="fillAndSubmit('Suggest less congested routes for reaching Madhapur, Hyderabad during peak hours')">🚦 Traffic Route Analysis</button>
+  </div>
+
+  <h2>📤 Upload Data File</h2>
+  <form method="post" enctype="multipart/form-data" action="/upload">
+    <select name="data_type" required>
+      <option value="Water">💧 Water Data</option>
+      <option value="Waste">🗑️ Waste Data</option>
+      <option value="Traffic">🚦 Traffic Data</option>
+    </select>
+    <input type="file" name="data_file" accept=".txt,.csv" required>
+    <button type="submit">Analyze</button>
+  </form>
+
+  
+
+  {% if response %}
+    <div class="response">
+      <strong>🤖 Assistant:</strong> {{ response }}
+    </div>
+  {% endif %}
+
+  <!-- 🗺️ Map Heading and Container -->
+  <h2 id="map-title" style="margin-top: 40px; display: none;">🗺️ Optimized Route Map</h2>
+  <div id="map" style="height: 400px; margin-top: 10px; display: none;"></div>
+
+  <!-- 📊 Chart Container -->
+  {% if chart_labels and chart_values %}
+    <h2>📈 Data Visualization ({{ data_type }})</h2>
+    <canvas id="dataChart" width="600" height="300"></canvas>
+  {% endif %}
+
+  <script>
+    function fillAndSubmit(question) {
+      const input = document.querySelector('input[name="user_input"]');
+      input.value = question;
+      input.form.submit();
+    }
+
+    {% if map_routes %}
+      document.getElementById("map-title").style.display = "block";
+      document.getElementById("map").style.display = "block";
+      const routeData = {{ map_routes | tojson }};
+      drawRoutesOnMap(routeData);
+    {% endif %}
+
+    {% if chart_labels and chart_values %}
+      const ctx = document.getElementById('dataChart').getContext('2d');
+      new Chart(ctx, {
+        type: '{{ chart_type }}',
+        data: {
+          labels: {{ chart_labels | tojson }},
+          datasets: [{
+            label: '{{ data_type }} Analysis',
+            data: {{ chart_values | tojson }},
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    {% endif %}
+  </script>
+</body>
+</html>
